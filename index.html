@@ -13,8 +13,6 @@
         <img src="" id="bg-img">
     </div>
     <div class="player">
-        
-       
         <!-- Dashboard -->
         <div class="dashboard">
             <!-- Search Bar -->
@@ -38,6 +36,9 @@
                             </div>
                             <div class="favorites-toggle">
                                 <i class="far fa-heart"></i><span style="font-size: 14px; margin-left: 8px">Love Songs</span>
+                            </div>
+                            <div class="upload-song">
+                                <i class="fas fa-upload"></i><span style="font-size: 14px; margin-left: 8px">Upload Song</span>
                             </div>
                         </div>
                     </div>
@@ -69,6 +70,21 @@
         </div>
         <!-- Playlist -->
         <div class="playlist"></div>
+    </div>
+    <!-- Input file ẩn để upload -->
+    <input type="file" id="upload-audio-input" accept="audio/*" style="display: none;">
+    <input type="file" id="upload-image-input" accept="image/*" style="display: none;">
+    <!-- Modal để nhập thông tin bài hát -->
+    <div id="upload-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <h3>Thêm bài hát mới</h3>
+            <input type="text" id="song-name" placeholder="Tên bài hát" >
+            <input type="text" id="singer-name" placeholder="Tên ca sĩ">
+            <button id="upload-image-btn">Chọn ảnh</button>
+            <img id="preview-image" src="https://via.placeholder.com/150" alt="Preview" style="width: 100px; height: 100px; margin-top: 10px;">
+            <button id="save-song-btn">Lưu</button>
+            <button id="cancel-song-btn">Hủy</button>
+        </div>
     </div>
     <script src="./app.js"></script>
 </body>

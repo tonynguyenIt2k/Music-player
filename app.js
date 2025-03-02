@@ -24,6 +24,16 @@ const darkModeToggle = $('.dark-mode-toggle');
 const favoritesToggle = $('.favorites-toggle');
 const optionIcon = $('.option-icon');
 const optionMenu = $('.option-menu');
+const uploadSong = $('.upload-song');
+const uploadAudioInput = $('#upload-audio-input');
+const uploadImageInput = $('#upload-image-input');
+const uploadModal = $('#upload-modal');
+const songNameInput = $('#song-name');
+const singerNameInput = $('#singer-name');
+const uploadImageBtn = $('#upload-image-btn');
+const previewImage = $('#preview-image');
+const saveSongBtn = $('#save-song-btn');
+const cancelSongBtn = $('#cancel-song-btn');
 
 const app = {
     currentIndex: 0,
@@ -54,7 +64,7 @@ const app = {
         },
         {
             name: 'Bồ công anh',
-            singer: 'Phong Max', 
+            singer: 'Phong Max',
             path: './assets/music/4.mp3',
             image: './assets/img/4.jpg'
         },
@@ -81,18 +91,19 @@ const app = {
             singer: 'Ed Sheeran',
             path: './assets/music/8.mp3',
             image: './assets/img/8.jpg'
-        },{
+        },
+        {
             name: 'Memories',
             singer: 'Maroon 5',
             path: './assets/music/9.mp3',
             image: './assets/img/9.jpg'
-        },{
+        },
+        {
             name: 'Yourman',
             singer: 'The Weeknd',
             path: './assets/music/10.mp3',
             image: './assets/img/10.jpg'
         }
-        
     ],
     setConfig: function(key, value) {
         this.config[key] = value;
@@ -100,9 +111,9 @@ const app = {
     },
     render: function(songs = this.songs) {
         const displaySongs = this.isShowingFavorites 
-            ? songs.filter((_, index) => this.favorites.includes(index)) 
+            ? this.songs.filter((_, index) => this.favorites.includes(index)) 
             : songs;
-        const htmls = displaySongs.map((song, index) => {
+        const htmls = displaySongs.map((song) => {
             const originalIndex = this.songs.findIndex(s => s.name === song.name && s.singer === song.singer);
             const isFavorited = this.favorites.includes(originalIndex);
             return `<div class="song ${originalIndex === this.currentIndex ? 'active' : ''}" data-index="${originalIndex}">
@@ -113,6 +124,9 @@ const app = {
                         </div>
                         <div class="btn-favorite ${isFavorited ? 'active' : ''}" data-index="${originalIndex}">
                             ${isFavorited ? '<i class="fas fa-heart"></i>' : '<i class="far fa-heart"></i>'}
+                        </div>
+                        <div class="btn-delete" data-index="${originalIndex}">
+                            <i class="fas fa-trash"></i>
                         </div>
                     </div>`;
         });
@@ -219,7 +233,8 @@ const app = {
         playlist.onclick = function(e) {
             const songNode = e.target.closest('.song:not(.active)');
             const favoriteBtn = e.target.closest('.btn-favorite');
-            if (songNode && !favoriteBtn) {
+            const deleteBtn = e.target.closest('.btn-delete');
+            if (songNode && !favoriteBtn && !deleteBtn) {
                 _this.currentIndex = Number(songNode.dataset.index);
                 _this.loadCurrentSong();
                 _this.render();
@@ -228,6 +243,10 @@ const app = {
             if (favoriteBtn) {
                 const index = Number(favoriteBtn.dataset.index);
                 _this.toggleFavorite(index);
+            }
+            if (deleteBtn) {
+                const index = Number(deleteBtn.dataset.index);
+                _this.deleteSong(index);
             }
         };
 
@@ -256,8 +275,8 @@ const app = {
             const isDark = document.body.classList.contains('dark');
             _this.setConfig('isDark', isDark);
             darkModeToggle.innerHTML = isDark ? 
-            '<i class="fas fa-sun" style="color: #fba524;"></i><span style="font-size: 14px;margin-left: 8px;">Light Mode</span>' : 
-            '<i class="fas fa-moon" style="color: #000;"></i><span style="font-size: 14px;margin-left: 8px;">Dark Mode</span> ';
+                '<i class="fas fa-sun" style="color: #fba524;"></i><span style="font-size: 14px; margin-left: 8px;">Light Mode</span>' : 
+                '<i class="fas fa-moon" style="color: #000;"></i><span style="font-size: 14px; margin-left: 8px;">Dark Mode</span>';
         };
 
         favoritesToggle.onclick = function() {
@@ -265,9 +284,68 @@ const app = {
             favoritesToggle.classList.toggle('active', _this.isShowingFavorites);
             _this.render();
         };
+
         optionIcon.onclick = function() {
             optionMenu.classList.toggle('active');
-        }
+        };
+
+        // Upload bài hát mới
+        uploadSong.onclick = function() {
+            uploadAudioInput.click();
+        };
+
+        let uploadedAudioFile = null;
+        uploadAudioInput.onchange = function(e) {
+            const file = e.target.files[0];
+            if (file && file.type.startsWith('audio/')) {
+                uploadedAudioFile = file;
+                songNameInput.value = file.name.replace(/\.[^/.]+$/, "");
+                singerNameInput.value = "";
+                previewImage.src = "https://via.placeholder.com/150";
+                uploadModal.style.display = 'flex';
+            } else {
+                alert("Vui lòng chọn file âm thanh hợp lệ!");
+            }
+        };
+
+        uploadImageBtn.onclick = function() {
+            uploadImageInput.click();
+        };
+
+        uploadImageInput.onchange = function(e) {
+            const file = e.target.files[0];
+            if (file && file.type.startsWith('image/')) {
+                const imageURL = URL.createObjectURL(file);
+                previewImage.src = imageURL;
+            } else {
+                alert("Vui lòng chọn file hình ảnh hợp lệ!");
+            }
+        };
+
+        saveSongBtn.onclick = function() {
+            if (uploadedAudioFile) {
+                const newSong = {
+                    name: songNameInput.value || "Unknown Song",
+                    singer: singerNameInput.value || "Unknown",
+                    path: URL.createObjectURL(uploadedAudioFile),
+                    image: previewImage.src
+                };
+                _this.songs.push(newSong);
+                _this.setConfig('songs', _this.songs);
+                _this.render();
+                uploadModal.style.display = 'none';
+                uploadedAudioFile = null;
+                uploadAudioInput.value = '';
+                uploadImageInput.value = '';
+            }
+        };
+
+        cancelSongBtn.onclick = function() {
+            uploadModal.style.display = 'none';
+            uploadedAudioFile = null;
+            uploadAudioInput.value = '';
+            uploadImageInput.value = '';
+        };
     },
     defineProperties: function() {
         Object.defineProperty(this, 'currentSong', {
@@ -298,7 +376,13 @@ const app = {
         volume.value = this.config.volume || 50;
         if (this.config.isDark) {
             document.body.classList.add('dark');
-            darkModeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+            darkModeToggle.innerHTML = '<i class="fas fa-sun" style="color: #fba524;"></i><span style="font-size: 14px; margin-left: 8px;">Light Mode</span>';
+        }
+        if (this.config.songs) {
+            this.songs = this.config.songs.map(song => ({
+                ...song,
+                path: song.path.includes('blob:') ? song.path : `./assets/music/${song.path.split('/').pop()}`
+            }));
         }
     },
     nextSong: function() {
@@ -332,6 +416,22 @@ const app = {
         }
         this.setConfig('favorites', this.favorites);
         this.render();
+    },
+    deleteSong: function(index) {
+        if (confirm("Bạn có chắc muốn xóa bài hát này không?")) {
+            this.songs.splice(index, 1);
+            this.favorites = this.favorites.filter(fav => fav !== index);
+            this.favorites = this.favorites.map(fav => fav > index ? fav - 1 : fav);
+            if (this.currentIndex === index) {
+                this.currentIndex = this.currentIndex > 0 ? this.currentIndex - 1 : 0;
+                this.loadCurrentSong();
+            } else if (this.currentIndex > index) {
+                this.currentIndex--;
+            }
+            this.setConfig('songs', this.songs);
+            this.setConfig('favorites', this.favorites);
+            this.render();
+        }
     },
     start: function() {
         this.loadConfig();
